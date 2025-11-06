@@ -1,0 +1,28 @@
+# Supabase PostgreSQL configuration
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+  # Supabase connection details
+  host: <%= ENV['SUPABASE_DB_HOST'] || 'localhost' %>
+  port: <%= ENV['SUPABASE_DB_PORT'] || 5432 %>
+  database: <%= ENV['SUPABASE_DB_NAME'] || 'postgres' %>
+  username: <%= ENV['SUPABASE_DB_USER'] || 'postgres' %>
+  password: <%= ENV['SUPABASE_DB_PASSWORD'] || '' %>
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+  database: secondlife_test
+
+production:
+  <<: *default
+  host: <%= ENV['SUPABASE_DB_HOST'] %>
+  port: <%= ENV['SUPABASE_DB_PORT'] %>
+  database: <%= ENV['SUPABASE_DB_NAME'] %>
+  username: <%= ENV['SUPABASE_DB_USER'] %>
+  password: <%= ENV['SUPABASE_DB_PASSWORD'] %>
+

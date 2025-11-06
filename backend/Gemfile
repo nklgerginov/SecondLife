@@ -1,0 +1,41 @@
+source 'https://rubygems.org'
+git_source(:github) { |repo| "https://github.com/#{repo}.git" }
+
+ruby '3.2.0'
+
+# Rails
+gem 'rails', '~> 7.0.0'
+
+# Database - Using Supabase (PostgreSQL)
+gem 'pg', '~> 1.1'
+
+# API
+gem 'rack-cors'
+
+# Authentication - Supabase handles this, but we need JWT for API tokens
+gem 'jwt'
+
+# Serializers
+gem 'active_model_serializers'
+
+# Pagination
+gem 'kaminari'
+
+# Image processing
+gem 'image_processing', '~> 1.2'
+gem 'mini_magick'
+
+# Environment variables
+gem 'dotenv-rails'
+
+group :development, :test do
+  gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
+  gem 'rspec-rails'
+  gem 'factory_bot_rails'
+end
+
+group :development do
+  gem 'listen', '~> 3.3'
+  gem 'spring'
+end
+
