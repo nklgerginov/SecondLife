@@ -4,81 +4,99 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import ListingCard from '../components/ListingCard';
-import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, TrendingUp, Eye as EyeIcon, DollarSign, Package } from 'lucide-react';
+import { mockListings } from '../data/mockData';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('listings');
 
-  // Mock data
-  const myListings = [
-    { id: 1, image: 'https://via.placeholder.com/300', title: 'Vintage Denim Jacket', price: '75.00', size: 'M', brand: 'Levi\'s', status: 'active' },
-    { id: 2, image: 'https://via.placeholder.com/300', title: 'Floral Maxi Dress', price: '50.00', size: 'S', brand: 'Zara', status: 'sold' },
-  ];
+  // Mock data - user's listings
+  const myListings = mockListings.slice(0, 4).map(item => ({
+    ...item,
+    status: item.id % 2 === 0 ? 'active' : 'sold',
+    price: item.price.toFixed(2)
+  }));
 
   const stats = {
-    activeListings: 1,
-    totalViews: 245,
+    activeListings: myListings.filter(l => l.status === 'active').length,
+    totalViews: 1245,
     totalSales: 12,
     earnings: '$850.00',
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Manage your listings and track your activity</p>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+        <div className="mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground text-lg">Manage your listings and track your activity</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Active Listings</CardDescription>
-              <CardTitle className="text-2xl sm:text-3xl">{stats.activeListings}</CardTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
+          <Card className="border-2 hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardDescription className="text-base">Active Listings</CardDescription>
+                <Package className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle className="text-3xl sm:text-4xl font-bold mt-2">{stats.activeListings}</CardTitle>
             </CardHeader>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Total Views</CardDescription>
-              <CardTitle className="text-2xl sm:text-3xl">{stats.totalViews}</CardTitle>
+          <Card className="border-2 hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardDescription className="text-base">Total Views</CardDescription>
+                <EyeIcon className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle className="text-3xl sm:text-4xl font-bold mt-2">{stats.totalViews.toLocaleString()}</CardTitle>
             </CardHeader>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Total Sales</CardDescription>
-              <CardTitle className="text-2xl sm:text-3xl">{stats.totalSales}</CardTitle>
+          <Card className="border-2 hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardDescription className="text-base">Total Sales</CardDescription>
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle className="text-3xl sm:text-4xl font-bold mt-2">{stats.totalSales}</CardTitle>
             </CardHeader>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Total Earnings</CardDescription>
-              <CardTitle className="text-2xl sm:text-3xl">{stats.earnings}</CardTitle>
+          <Card className="border-2 hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardDescription className="text-base">Total Earnings</CardDescription>
+                <DollarSign className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle className="text-3xl sm:text-4xl font-bold mt-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                {stats.earnings}
+              </CardTitle>
             </CardHeader>
           </Card>
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6 sm:mb-8 border-b">
+        <div className="flex flex-wrap gap-2 mb-8 border-b-2">
           <Button
             variant={activeTab === 'listings' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('listings')}
-            className="rounded-b-none"
+            className="rounded-b-none h-12 px-6 font-semibold"
           >
             My Listings
           </Button>
           <Button
             variant={activeTab === 'saved' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('saved')}
-            className="rounded-b-none"
+            className="rounded-b-none h-12 px-6 font-semibold"
           >
             Saved Items
           </Button>
           <Button
             variant={activeTab === 'messages' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('messages')}
-            className="rounded-b-none"
+            className="rounded-b-none h-12 px-6 font-semibold"
           >
             Messages
           </Button>
@@ -87,31 +105,39 @@ const DashboardPage = () => {
         {/* Content */}
         {activeTab === 'listings' && (
           <div>
-            <div className="flex justify-between items-center mb-4 sm:mb-6">
-              <h2 className="text-xl sm:text-2xl font-semibold">My Listings</h2>
-              <Button onClick={() => navigate('/post')} size="lg" className="h-11">
-                <Plus className="mr-2 h-4 w-4" />
+            <div className="flex justify-between items-center mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold">My Listings</h2>
+              <Button onClick={() => navigate('/post')} size="lg" className="h-12 shadow-lg">
+                <Plus className="mr-2 h-5 w-5" />
                 <span className="hidden sm:inline">New Listing</span>
                 <span className="sm:hidden">New</span>
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
               {myListings.map(listing => (
-                <div key={listing.id} className="relative space-y-2">
-                  <div className="absolute top-2 right-2 z-10">
-                    <Badge variant={listing.status === 'active' ? 'default' : 'secondary'}>
+                <div key={listing.id} className="relative space-y-3">
+                  <div className="absolute top-3 right-3 z-10">
+                    <Badge variant={listing.status === 'active' ? 'default' : 'secondary'} className="text-sm px-3 py-1">
                       {listing.status}
                     </Badge>
                   </div>
-                  <ListingCard {...listing} />
+                  <ListingCard 
+                    id={listing.id}
+                    image={listing.images[0]}
+                    title={listing.title}
+                    price={listing.price}
+                    size={listing.size}
+                    brand={listing.brand}
+                    condition={listing.condition}
+                  />
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button variant="outline" size="sm" className="flex-1 h-10">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button variant="outline" size="sm" className="flex-1 h-10">
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1 text-destructive">
+                    <Button variant="outline" size="sm" className="flex-1 h-10 text-destructive hover:text-destructive">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

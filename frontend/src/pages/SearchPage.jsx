@@ -1,53 +1,57 @@
 import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Card, CardContent } from '../components/ui/card';
 import ListingCard from '../components/ListingCard';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { mockListings } from '../data/mockData';
 
 const SearchPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
   
-  // Mock search results
-  const searchResults = [
-    { id: 1, image: 'https://via.placeholder.com/300', title: 'Vintage Denim Jacket', price: '75.00', size: 'M', brand: 'Levi\'s' },
-    { id: 2, image: 'https://via.placeholder.com/300', title: 'Floral Maxi Dress', price: '50.00', size: 'S', brand: 'Zara' },
-    { id: 3, image: 'https://via.placeholder.com/300', title: 'Leather Ankle Boots', price: '120.00', size: '8', brand: 'Dr. Martens' },
-    { id: 4, image: 'https://via.placeholder.com/300', title: 'Striped Sweater', price: '45.00', size: 'L', brand: 'H&M' },
-  ];
+  // Filter listings based on search
+  const searchResults = mockListings.filter(item => {
+    const matchesQuery = !searchQuery || 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesLocation = !location || 
+      item.location.toLowerCase().includes(location.toLowerCase());
+    return matchesQuery && matchesLocation;
+  });
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         {/* Search Header */}
-        <div className="mb-6 sm:mb-8 lg:mb-12">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">
+        <div className="mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             Search Listings
           </h1>
+          <p className="text-muted-foreground text-lg mb-6">Find your perfect pre-loved fashion</p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1 flex flex-col sm:flex-row gap-3">
               <Input
                 type="text"
-                placeholder="Search items..."
+                placeholder="Search items, brands, descriptions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-11 sm:h-12"
+                className="w-full h-12 sm:h-14 text-base border-2 focus:border-primary"
               />
               <Input
                 type="text"
                 placeholder="Location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full sm:w-48 h-11 sm:h-12"
+                className="w-full sm:w-56 h-12 sm:h-14 text-base border-2 focus:border-primary"
               />
             </div>
-            <Button size="lg" className="w-full sm:w-auto h-11 sm:h-12">
-              <Search className="mr-2 h-4 w-4" />
+            <Button size="lg" className="w-full sm:w-auto h-12 sm:h-14 text-base font-semibold shadow-lg">
+              <Search className="mr-2 h-5 w-5" />
               Search
             </Button>
-            <Button variant="outline" size="lg" className="w-full sm:w-auto h-11 sm:h-12">
-              <Filter className="mr-2 h-4 w-4" />
+            <Button variant="outline" size="lg" className="w-full sm:w-auto h-12 sm:h-14 text-base border-2">
+              <SlidersHorizontal className="mr-2 h-5 w-5" />
               Filters
             </Button>
           </div>
@@ -55,14 +59,31 @@ const SearchPage = () => {
 
         {/* Results */}
         <div>
-          <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
-            Found {searchResults.length} results
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-            {searchResults.map(item => (
-              <ListingCard key={item.id} {...item} />
-            ))}
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
+            <p className="text-base sm:text-lg text-muted-foreground font-medium">
+              Found <span className="text-foreground font-bold">{searchResults.length}</span> {searchResults.length === 1 ? 'result' : 'results'}
+            </p>
           </div>
+          {searchResults.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+              {searchResults.map(item => (
+                <ListingCard 
+                  key={item.id} 
+                  id={item.id}
+                  image={item.images[0]}
+                  title={item.title}
+                  price={item.price.toFixed(2)}
+                  size={item.size}
+                  brand={item.brand}
+                  condition={item.condition}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-xl text-muted-foreground">No results found. Try adjusting your search.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
