@@ -1,7 +1,10 @@
-class Favorite < ApplicationRecord
-  belongs_to :user
-  belongs_to :listing
+class Favorite
+  attr_accessor :id, :user_id, :listing_id
 
-  validates :user_id, uniqueness: { scope: :listing_id }
+  def initialize(attributes = {})
+    @id = attributes[:id]
+    @user_id = attributes[:user_id]
+    @listing_id = attributes[:listing_id]
+  end
 end
 

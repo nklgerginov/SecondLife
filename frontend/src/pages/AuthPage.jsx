@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useAuth from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -9,11 +11,35 @@ const AuthPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState(null);
+  const { login, signUp, loading } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle authentication
-    console.log(isLogin ? 'Login' : 'Register', { email, password });
+    setError(null);
+
+    if (!isLogin && password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    try {
+      let result;
+      if (isLogin) {
+        result = await login(email, password);
+      } else {
+        result = await signUp(email, password);
+      }
+
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -31,6 +57,7 @@ const AuthPage = () => {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-5">
+            {error && <p className="text-red-500 text-center">{error}</p>}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-base font-medium">Email</Label>
               <Input
@@ -76,8 +103,8 @@ const AuthPage = () => {
             )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4 pt-6">
-            <Button type="submit" className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl">
-              {isLogin ? 'Sign In' : 'Sign Up'}
+            <Button type="submit" className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl" disabled={loading}>
+              {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
             </Button>
             <div className="text-center text-sm">
               <Button

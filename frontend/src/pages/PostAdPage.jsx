@@ -1,30 +1,61 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { postAd } from '../services/apiService';
 
 const PostAdPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     brand: '',
     price: '',
     size: '',
     condition: '',
-    category: '',
+    category_id: '',
     description: '',
     location: '',
   });
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Posting ad:', formData);
-    // Handle form submission
+    setLoading(true);
+    setError(null);
+
+    const adData = new FormData();
+    for (const key in formData) {
+      adData.append(`listing[${key}]`, formData[key]);
+    }
+    for (let i = 0; i < images.length; i++) {
+      adData.append('listing[images][]', images[i]);
+    }
+
+    try {
+      const result = await postAd(adData);
+      if (result.listing) {
+        navigate(`/listing/${result.listing.id}`);
+      } else {
+        setError('Could not create listing');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    setImages(e.target.files);
   };
 
   return (
@@ -44,6 +75,7 @@ const PostAdPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                 <div className="space-y-2">
@@ -104,12 +136,12 @@ const PostAdPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-base font-medium">Category *</Label>
+                  <Label htmlFor="category" className="text-base font-medium">Category ID *</Label>
                   <Input
                     id="category"
-                    value={formData.category}
-                    onChange={(e) => handleChange('category', e.target.value)}
-                    placeholder="e.g. Dresses, Outerwear"
+                    value={formData.category_id}
+                    onChange={(e) => handleChange('category_id', e.target.value)}
+                    placeholder="e.g. 1, 2, 3"
                     required
                     className="h-12 text-base border-2 focus:border-primary"
                   />
@@ -145,6 +177,7 @@ const PostAdPage = () => {
                   type="file"
                   accept="image/*"
                   multiple
+                  onChange={handleImageChange}
                   className="h-12 text-base border-2 cursor-pointer"
                 />
                 <p className="text-sm text-muted-foreground">
@@ -152,8 +185,8 @@ const PostAdPage = () => {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
-                <Button type="submit" size="lg" className="flex-1 h-14 text-base font-semibold shadow-lg hover:shadow-xl">
-                  Post Listing
+                <Button type="submit" size="lg" className="flex-1 h-14 text-base font-semibold shadow-lg hover:shadow-xl" disabled={loading}>
+                  {loading ? 'Posting...' : 'Post Listing'}
                 </Button>
                 <Button type="button" variant="outline" size="lg" className="flex-1 h-14 text-base font-semibold border-2">
                   Save as Draft

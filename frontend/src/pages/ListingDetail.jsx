@@ -1,18 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { ArrowLeft, Heart, Share2, MessageCircle, MapPin, User } from 'lucide-react';
-import { mockListings } from '../data/mockData';
+import { getListing } from '../services/apiService';
 
 const ListingDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [listing, setListing] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [saved, setSaved] = useState(false);
-  
-  // Find listing from mock data
-  const listing = mockListings.find(item => item.id === parseInt(id)) || mockListings[0];
+
+  useEffect(() => {
+    const fetchListing = async () => {
+      try {
+        setLoading(true);
+        const data = await getListing(id);
+        setListing(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchListing();
+  }, [id]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!listing) {
+    return <div>Listing not found</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,7 +59,7 @@ const ListingDetailPage = () => {
           <div className="space-y-4">
             <div className="relative w-full aspect-square overflow-hidden rounded-xl border-2 shadow-lg">
               <img
-                src={listing.images[0]}
+                src={listing.image}
                 alt={listing.title}
                 className="w-full h-full object-cover"
               />
@@ -41,7 +69,7 @@ const ListingDetailPage = () => {
                 </Badge>
               </div>
             </div>
-            {listing.images.length > 1 && (
+            {listing.images && listing.images.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
                 {listing.images.slice(1, 5).map((img, idx) => (
                   <div key={idx} className="aspect-square rounded-lg overflow-hidden border-2 cursor-pointer hover:border-primary transition-colors">
@@ -92,7 +120,7 @@ const ListingDetailPage = () => {
             <Card className="border-2 shadow-lg">
               <CardHeader className="pb-4">
                 <CardTitle className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  ${listing.price.toFixed(2)}
+                  ${listing.price}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -105,7 +133,7 @@ const ListingDetailPage = () => {
                     <User className="h-5 w-5" />
                     Seller
                   </h3>
-                  <p className="text-muted-foreground font-medium">{listing.seller.username}</p>
+                  <p className="text-muted-foreground font-medium">{listing.seller_name}</p>
                 </div>
                 <Button size="lg" className="w-full h-14 text-lg font-semibold shadow-lg hover:shadow-xl">
                   Contact Seller

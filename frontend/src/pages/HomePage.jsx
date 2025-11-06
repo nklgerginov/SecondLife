@@ -1,15 +1,46 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ListingCard from '../components/ListingCard';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
 import { Search, Sparkles } from 'lucide-react';
-import { categories, mockListings } from '../data/mockData';
+import { getCategories, getNewListings } from '../services/apiService';
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const newArrivals = mockListings.slice(0, 8);
+  const [categories, setCategories] = useState([]);
+  const [newArrivals, setNewArrivals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [categoriesData, newListingsData] = await Promise.all([
+          getCategories(),
+          getNewListings(),
+        ]);
+        setCategories(categoriesData.categories);
+        setNewArrivals(newListingsData.listings);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">

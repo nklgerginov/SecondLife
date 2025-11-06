@@ -1,28 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import ListingCard from '../components/ListingCard';
 import { Plus, Edit, Trash2, Eye, TrendingUp, Eye as EyeIcon, DollarSign, Package } from 'lucide-react';
-import { mockListings } from '../data/mockData';
+import { getMyListings, getFavorites } from '../services/apiService';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('listings');
+  const [myListings, setMyListings] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock data - user's listings
-  const myListings = mockListings.slice(0, 4).map(item => ({
-    ...item,
-    status: item.id % 2 === 0 ? 'active' : 'sold',
-    price: item.price.toFixed(2)
-  }));
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        if (activeTab === 'listings') {
+          const listingsData = await getMyListings();
+          setMyListings(listingsData.listings);
+        } else if (activeTab === 'saved') {
+          const favoritesData = await getFavorites();
+          setFavorites(favoritesData.favorites);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [activeTab]);
 
   const stats = {
     activeListings: myListings.filter(l => l.status === 'active').length,
-    totalViews: 1245,
-    totalSales: 12,
-    earnings: '$850.00',
+    totalViews: 1245, // Mock data
+    totalSales: 12, // Mock data
+    earnings: '$850.00', // Mock data
   };
 
   return (
@@ -103,64 +121,84 @@ const DashboardPage = () => {
         </div>
 
         {/* Content */}
-        {activeTab === 'listings' && (
-          <div>
-            <div className="flex justify-between items-center mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold">My Listings</h2>
-              <Button onClick={() => navigate('/post')} size="lg" className="h-12 shadow-lg">
-                <Plus className="mr-2 h-5 w-5" />
-                <span className="hidden sm:inline">New Listing</span>
-                <span className="sm:hidden">New</span>
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
-              {myListings.map(listing => (
-                <div key={listing.id} className="relative space-y-3">
-                  <div className="absolute top-3 right-3 z-10">
-                    <Badge variant={listing.status === 'active' ? 'default' : 'secondary'} className="text-sm px-3 py-1">
-                      {listing.status}
-                    </Badge>
-                  </div>
-                  <ListingCard 
-                    id={listing.id}
-                    image={listing.images[0]}
-                    title={listing.title}
-                    price={listing.price}
-                    size={listing.size}
-                    brand={listing.brand}
-                    condition={listing.condition}
-                  />
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 h-10">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 h-10">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1 h-10 text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+        {loading ? (
+          <div>Loading...</div>
+        ) : error ? (
+          <div>Error: {error}</div>
+        ) : (
+          <>
+            {activeTab === 'listings' && (
+              <div>
+                <div className="flex justify-between items-center mb-6 sm:mb-8">
+                  <h2 className="text-2xl sm:text-3xl font-bold">My Listings</h2>
+                  <Button onClick={() => navigate('/post')} size="lg" className="h-12 shadow-lg">
+                    <Plus className="mr-2 h-5 w-5" />
+                    <span className="hidden sm:inline">New Listing</span>
+                    <span className="sm:hidden">New</span>
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+                  {myListings.map(listing => (
+                    <div key={listing.id} className="relative space-y-3">
+                      <div className="absolute top-3 right-3 z-10">
+                        <Badge variant={listing.status === 'active' ? 'default' : 'secondary'} className="text-sm px-3 py-1">
+                          {listing.status}
+                        </Badge>
+                      </div>
+                      <ListingCard 
+                        id={listing.id}
+                        image={listing.image}
+                        title={listing.title}
+                        price={listing.price}
+                        size={listing.size}
+                        brand={listing.brand}
+                        condition={listing.condition}
+                      />
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 h-10">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1 h-10">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1 h-10 text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {activeTab === 'saved' && (
-          <Card>
-            <CardContent className="p-6 sm:p-12 text-center">
-              <p className="text-muted-foreground">No saved items yet</p>
-            </CardContent>
-          </Card>
-        )}
+            {activeTab === 'saved' && (
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Saved Items</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+                  {favorites.map(fav => (
+                    <ListingCard 
+                      key={fav.listing.id} 
+                      id={fav.listing.id}
+                      image={fav.listing.image}
+                      title={fav.listing.title}
+                      price={fav.listing.price}
+                      size={fav.listing.size}
+                      brand={fav.listing.brand}
+                      condition={fav.listing.condition}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {activeTab === 'messages' && (
-          <Card>
-            <CardContent className="p-6 sm:p-12 text-center">
-              <p className="text-muted-foreground">No messages yet</p>
-            </CardContent>
-          </Card>
+            {activeTab === 'messages' && (
+              <Card>
+                <CardContent className="p-6 sm:p-12 text-center">
+                  <p className="text-muted-foreground">No messages yet</p>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </div>
     </div>

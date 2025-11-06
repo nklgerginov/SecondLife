@@ -39,23 +39,31 @@ class ApplicationController < ActionController::API
       return
     end
 
-    # Verify token with Supabase (in production, you'd call Supabase API)
-    # For now, we'll decode JWT to get user info
     begin
-      secret = Rails.application.credentials.secret_key_base || ENV['SECRET_KEY_BASE'] || 'development_secret'
-      decoded_token = JWT.decode(token, secret, true, { algorithm: 'HS256' })
-      user_id = decoded_token[0]['user_id']
-      @current_user = User.find_by(id: user_id)
-      unless @current_user
-        render json: { error: 'Invalid token' }, status: :unauthorized
+      # Verify token with Supabase
+      response = SUPABASE_CLIENT.auth.get_user(token)
+      if response.user
+        @current_supabase_user = response.user
+        @current_user = User.find_by(supabase_id: @current_supabase_user.id)
+        unless @current_user
+          render json: { error: 'User not found in local database' }, status: :unauthorized
+        end
+      else
+        render json: { error: 'Invalid or expired token' }, status: :unauthorized
       end
-    rescue JWT::DecodeError, JWT::ExpiredSignature, JWT::VerificationError => e
-      render json: { error: 'Invalid or expired token' }, status: :unauthorized
+    rescue Supabase::Gotrue::APIError => e
+      render json: { error: "Supabase authentication failed: #{e.message}" }, status: :unauthorized
+    rescue StandardError => e
+      render json: { error: "Authentication error: #{e.message}" }, status: :unauthorized
     end
   end
 
   def current_user
     @current_user
+  end
+
+  def current_supabase_user
+    @current_supabase_user
   end
 
   def record_not_found(exception)

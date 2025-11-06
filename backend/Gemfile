@@ -8,6 +8,7 @@ gem 'rails', '~> 7.0.0'
 
 # Database - Using Supabase (PostgreSQL)
 gem 'pg', '~> 1.1'
+gem 'supabase-ruby', '~> 0.3.0'
 
 # API
 gem 'rack-cors'

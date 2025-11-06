@@ -3,40 +3,53 @@ module V1
     class AuthController < ApplicationController
       skip_before_action :authenticate_user!, only: [:register, :login]
 
-      # Register - Supabase handles actual registration, we just store user data
       def register
-        # In production, this would verify the Supabase user first
-        user = User.new(user_params)
-        user.supabase_id = params[:supabase_id] || SecureRandom.uuid # Placeholder
-
-        if user.save
-          render json: {
-            message: 'User registered successfully',
-            user: user_serializer(user),
-            token: generate_token(user)
-          }, status: :created
-        else
-          render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+        begin
+          response = SUPABASE_CLIENT.auth.sign_up(email: params[:email], password: params[:password])
+          if response.user
+            user = User.new(user_params.merge(supabase_id: response.user.id))
+            if user.save
+              render json: {
+                message: 'User registered successfully',
+                user: user_serializer(user),
+                access_token: response.access_token,
+                refresh_token: response.refresh_token
+              }, status: :created
+            else
+              # If local user creation fails, consider deleting the Supabase user
+              render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+            end
+          else
+            render json: { error: response.error.message }, status: :unprocessable_entity
+          end
+        rescue Supabase::Gotrue::APIError => e
+          render json: { error: e.message }, status: :unprocessable_entity
         end
       end
 
-      # Login - Supabase handles authentication, we return API token
       def login
-        user = User.find_by(email: params[:email])
-        
-        if user
-          # In production, verify Supabase session here
-          render json: {
-            message: 'Login successful',
-            user: user_serializer(user),
-            token: generate_token(user)
-          }
-        else
-          render json: { error: 'Invalid email or password' }, status: :unauthorized
+        begin
+          response = SUPABASE_CLIENT.auth.sign_in_with_password(email: params[:email], password: params[:password])
+          if response.user
+            user = User.find_by(supabase_id: response.user.id)
+            if user
+              render json: {
+                message: 'Login successful',
+                user: user_serializer(user),
+                access_token: response.access_token,
+                refresh_token: response.refresh_token
+              }
+            else
+              render json: { error: 'User not found in local database' }, status: :unauthorized
+            end
+          else
+            render json: { error: response.error.message }, status: :unauthorized
+          end
+        rescue Supabase::Gotrue::APIError => e
+          render json: { error: e.message }, status: :unauthorized
         end
       end
 
-      # Get current user
       def me
         render json: { user: user_serializer(current_user) }
       end
@@ -54,16 +67,6 @@ module V1
           firstName: user.first_name,
           lastName: user.last_name
         }
-      end
-
-      def generate_token(user)
-        payload = {
-          user_id: user.id,
-          email: user.email,
-          exp: 7.days.from_now.to_i
-        }
-        secret = Rails.application.credentials.secret_key_base || ENV['SECRET_KEY_BASE'] || 'development_secret'
-        JWT.encode(payload, secret, 'HS256')
       end
     end
   end

@@ -27,6 +27,9 @@ Rails.application.routes.draw do
 
       # Categories endpoints
       resources :categories, only: [:index, :show]
+
+      # Favorites endpoints
+      resources :favorites, only: [:index, :create, :destroy]
     end
   end
 
